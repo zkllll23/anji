@@ -3,11 +3,16 @@
 import pandas as pd  # 存取csv文件
 import jieba  # 分词
 from wordcloud import WordCloud  # 词云
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt  # 图的显示
+from collections import Counter  # 计数器
 
 
-# 加载停用词
 def load_stopwords(file_path):
+    """
+    加载停用词
+    :param file_path: 停用词文件路径
+    :return: 停用词集合
+    """
     stopwords = set()
     with open(file_path, 'r', encoding='utf-8') as file:
         for line in file:
@@ -16,8 +21,12 @@ def load_stopwords(file_path):
     return stopwords
 
 
-# 分析文本
 def analysis_text(analysis_keyword):
+    """
+    文本分析
+    :param analysis_keyword: 分析关键词
+    :return: 分词过滤后的关键词
+    """
     # 读取csv数据，并转换时间格式
     df = pd.read_csv('微博清单/微博清单_{}_前100页.csv'.format(keyword), parse_dates=['发布时间'])
     # 读取微博内容转为列表
@@ -31,8 +40,11 @@ def analysis_text(analysis_keyword):
     return filtered_words
 
 
-# 生存词云图
 def generate_wordcloud(wordcloud_text):
+    """
+    生成词云图
+    :param wordcloud_text: 词云内容
+    """
     # 词云配置
     wc = WordCloud(
         scale=5,
@@ -56,6 +68,25 @@ def generate_wordcloud(wordcloud_text):
     plt.show()
 
 
+# 统计词频
+def count_word_frequency(count_text, cur_keyword):
+    """
+    统计词频
+    :param count_text: 用于统计的内容
+    :param cur_keyword: 当前关键词
+    """
+    # 统计词频
+    word_frequency = Counter(jieba_text)
+    # 词频排序
+    sorted_word_frequency = sorted(word_frequency.items(), key=lambda x: x[1], reverse=True)
+    # 创建DataFrame对象
+    df = pd.DataFrame(sorted_word_frequency, columns=['关键词', '频率'])
+    # 定义要保存的CSV文件路径
+    csv_file = '词频统计/{}_词频统计.csv'.format(keyword)
+    # 将 DataFrame 写入CSV文件
+    df.to_csv(csv_file, index=False, encoding='utf_8_sig')
+
+
 if __name__ == '__main__':
     # 爬虫爬取关键词
     search_keywords = ['装置艺术', '光装置', '交互体验', '疗愈', '沉浸感']
@@ -63,14 +94,15 @@ if __name__ == '__main__':
     stopwords_file = r"停用词/stopwords.txt"
     # 加载停用词
     stopword_list = load_stopwords(stopwords_file)
-
     # 从文件中读取wc_stopwords
-    with open('停用词/wc_stopwords.txt', 'r', encoding='utf-8') as f:
+    with open('停用词/wc_stopwords.txt', 'r', encoding='utf_8_sig') as f:
         wc_stopwords = {line.strip() for line in f.readlines()}
 
     # 分析微博文件
     for keyword in search_keywords:
         # jieba分词分析文本
         jieba_text = analysis_text(keyword)
+        # 词频统计
+        count_word_frequency(jieba_text, keyword)
         # 生成词云
         generate_wordcloud(jieba_text)
